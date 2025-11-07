@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="header admin-header">
+    <h1>Admin Dashboard</h1>
+    <button class="btn logout" onclick="logout()">Logout</button>
+  </header>
+
+  <main class="container">
+    <section class="upload-section">
+      <h2>Upload New Notice</h2>
+      <form id="uploadForm" enctype="multipart/form-data" class="upload-form">
+        <input type="text" name="title" placeholder="Enter Notice Title" required>
+        <input type="file" name="noticeFile" required>
+        <button type="submit" class="btn upload-btn">Upload Notice</button>
+      </form>
+    </section>
+
+    <section class="notice-section">
+      <h2>Uploaded Notices</h2>
+      <div id="noticeList" class="notice-list"></div>
+    </section>
+  </main>
+
+  <script>
+    async function loadNotices() {
+      const res = await fetch('/notices');
+      const notices = await res.json();
+      const list = document.getElementById('noticeList');
+      list.innerHTML = '';
+      if (!notices.length) {
+        list.innerHTML = '<p class="empty">No notices uploaded yet.</p>';
+        return;
+      }
+
+      notices.reverse().forEach(n => {
+        const div = document.createElement('div');
+        div.className = 'notice-card';
+        div.innerHTML = `
+          <div class="notice-info">
+            <h3>${n.title}</h3>
+            <p class="date">${n.date}</p>
+          </div>
+          <div class="actions">
+            <a href="${n.filePath}" target="_blank" class="btn-view">View</a>
+            <button class="btn delete" onclick="deleteNotice('${n.filename}')">Delete</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    async function deleteNotice(filename) {
+      if (!confirm('Delete this notice?')) return;
+      const res = await fetch('/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
+      });
+      const data = await res.json();
+      if (data.success) {
+        loadNotices();
+      } else {
+        alert('Delete failed');
+      }
+    }
+
+    const form = document.getElementById('uploadForm');
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const res = await fetch('/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) {
+        alert('Notice uploaded successfully!');
+        form.reset();
+        loadNotices();
+      } else {
+        alert('Upload failed');
+      }
+    });
+
+    async function logout() {
+      await fetch('/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    }
+
+    loadNotices();
+  </script>
+</body>
+</html>
+

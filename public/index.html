@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>School Notice Board</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="header">
+    <h1>📢 School Notice Board</h1>
+  </header>
+
+  <main class="container">
+    <div id="noticeList" class="notice-list"></div>
+  </main>
+
+  <footer class="footer">
+    <p>© 2025 School Notice Board</p>
+  </footer>
+
+  <script>
+    async function loadNotices() {
+      const res = await fetch('/notices');
+      const notices = await res.json();
+      const list = document.getElementById('noticeList');
+      list.innerHTML = '';
+      if (!notices.length) {
+        list.innerHTML = '<p class="empty">No notices available yet.</p>';
+        return;
+      }
+
+      notices.reverse().forEach(n => {
+        const div = document.createElement('div');
+        div.className = 'notice-card';
+        div.innerHTML = `
+          <div class="notice-info">
+            <h3>${n.title}</h3>
+            <p class="date">${n.date}</p>
+          </div>
+          <a href="${n.filePath}" target="_blank" class="btn-view">View PDF</a>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    loadNotices();
+  </script>
+</body>
+</html>
